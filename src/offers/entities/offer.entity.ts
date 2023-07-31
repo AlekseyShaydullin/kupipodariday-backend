@@ -1,4 +1,5 @@
-import { Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
+import { IsNumber } from 'class-validator';
 import { BaseEntity } from 'src/base-entity/base.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Wish } from 'src/wishes/entities/wish.entity';
@@ -10,4 +11,18 @@ export class Offer extends BaseEntity {
 
   @ManyToOne(() => Wish, (wish) => wish.offers)
   item: Wish;
+
+  @Column({
+    type: 'float',
+  })
+  @IsNumber({
+    maxDecimalPlaces: 2,
+  })
+  amount: number;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  hidden: boolean;
 }
