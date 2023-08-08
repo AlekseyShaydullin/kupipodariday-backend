@@ -1,9 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { Offer } from './entities/offer.entity';
 import { WishesService } from '../wishes/wishes.service';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class OffersService {
@@ -13,25 +18,53 @@ export class OffersService {
     private readonly wishesService: WishesService,
   ) {}
 
-  async createOffer(createOfferDto: CreateOfferDto) {
+  async createOffer(createOfferDto: CreateOfferDto, user: User) {
     const { itemId, amount } = createOfferDto;
     const wish = await this.wishesService.findOne({
       where: { id: itemId },
       relations: { owner: true },
     });
 
-    return 'This action adds a new offer';
+    if (!wish) {
+      throw new NotFoundException(`Подарок не найден`);
+    }
+    if (wish.owner.id === user.id) {
+      throw new ForbiddenException(`Простите, но вы не можете вносить деньги`);
+    }
+
+    const { price, raised } = wish;
+    if (amount + raised > price) {
+      throw new ForbiddenException(
+        `В данный момент, вы не можете заплатить больше, чем 
+        ${price - raised} RUB`,
+      );
+    }
+
+    await this.wishesService.updateWish(
+      itemId,
+      { raised: amount + raised },
+      wish.owner.id,
+    );
+
+    const offer = this.offerRepository.create({
+      ...createOfferDto,
+      owner: user,
+      item: wish,
+    });
+
+    return this.offerRepository.save(offer);
   }
 
-  findAll() {
-    return `This action returns all offers`;
+  async findAll(): Promise<Offer[]> {
+    return await this.offerRepository.find({
+      where: {},
+      relations: { owner: true, item: true },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} offer`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} offer`;
+  async findOne(id: number): Promise<Offer> {
+    return await this.offerRepository.findOne({
+      where: { id },
+    });
   }
 }
