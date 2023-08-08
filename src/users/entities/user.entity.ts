@@ -1,9 +1,9 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { Length, IsUrl, IsEmail } from 'class-validator';
-import { Wish } from 'src/wishes/entities/wish.entity';
-import { BaseEntity } from 'src/base-entity/base.entity';
-import { Wishlist } from 'src/wishlists/entities/wishlist.entity';
-import { Offer } from 'src/offers/entities/offer.entity';
+import { Wish } from '../../wishes/entities/wish.entity';
+import { BaseEntity } from '../../base-entity/base.entity';
+import { Wishlist } from '../../wishlists/entities/wishlist.entity';
+import { Offer } from '../../offers/entities/offer.entity';
 
 @Entity()
 export class User extends BaseEntity {

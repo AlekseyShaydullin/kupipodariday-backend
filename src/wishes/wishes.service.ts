@@ -1,26 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
+import { Wish } from './entities/wish.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class WishesService {
-  create(createWishDto: CreateWishDto) {
-    return 'This action adds a new wish';
+  constructor(
+    @InjectRepository(Wish)
+    private readonly wishRepository: Repository<Wish>,
+  ) {}
+
+  create(createWishDto: CreateWishDto, owner: User) {
+    const newWish = this.wishRepository.create({
+      ...createWishDto,
+      owner,
+    });
+    return this.wishRepository.create(newWish);
   }
 
-  findAll() {
-    return `This action returns all wishes`;
+  async findOne(query: FindOneOptions<Wish>): Promise<Wish> {
+    return await this.wishRepository.findOne(query);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} wish`;
+  async updateWish(id: number, updateWishDto: UpdateWishDto, ownerId: number) {
+    const wish = await this.findOne({
+      where: { id },
+      relations: { owner: true },
+    });
+
+    if (!wish) {
+      throw new NotFoundException(`Подарок не найден`);
+    }
+    if (wish.owner.id !== ownerId) {
+      throw new NotAcceptableException(`Этот подарок другого пользователя`);
+    }
+
+    await this.wishRepository.save({ ...wish, ...updateWishDto });
+
+    return await this.findOne({
+      where: { id },
+      relations: { owner: true },
+    });
   }
 
-  update(id: number, updateWishDto: UpdateWishDto) {
-    return `This action updates a #${id} wish`;
-  }
+  async removeWish(id: number, ownerId: number): Promise<Wish> {
+    const wish = await this.findOne({
+      where: { id },
+      relations: { owner: true },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} wish`;
+    if (!wish) {
+      throw new NotFoundException(`Подарок не найден`);
+    }
+    if (wish.owner.id !== ownerId) {
+      throw new NotAcceptableException(`Этот подарок другого пользователя`);
+    }
+
+    await this.wishRepository.delete(id);
+
+    return wish;
   }
 }
