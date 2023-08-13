@@ -8,13 +8,14 @@ import { FindOneOptions, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { hashPassword } from '../common/hash';
+import { HashService } from 'src/hash/hash.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly hashService: HashService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -25,11 +26,9 @@ export class UsersService {
 
     if (isExist) throw new UnauthorizedException(`Пользователь уже существует`);
 
-    const { password } = createUserDto;
-    const passwordHash = await hashPassword(password);
     const newUser = this.userRepository.create({
       ...createUserDto,
-      password: passwordHash,
+      password: this.hashService.getHash(createUserDto.password),
     });
     return await this.userRepository.save(newUser);
   }
@@ -60,7 +59,7 @@ export class UsersService {
     }
 
     if (password) {
-      const passHash = await hashPassword(password);
+      const passHash = this.hashService.getHash(updateUserDto.password);
       updateUserDto.password = passHash;
     }
 
