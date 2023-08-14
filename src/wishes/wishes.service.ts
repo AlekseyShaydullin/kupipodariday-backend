@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotAcceptableException,
   NotFoundException,
@@ -8,30 +9,58 @@ import { FindOneOptions, In, Repository } from 'typeorm';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { Wish } from './entities/wish.entity';
-import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class WishesService {
   constructor(
     @InjectRepository(Wish)
     private readonly wishRepository: Repository<Wish>,
+    private readonly userService: UsersService,
   ) {}
 
-  create(createWishDto: CreateWishDto, owner: User) {
+  async create(createWishDto: CreateWishDto, id: number) {
+    const owner = await this.userService.findOneById(id);
     const newWish = this.wishRepository.create({
       ...createWishDto,
       owner,
     });
     return this.wishRepository.create(newWish);
   }
-
   async findOne(query: FindOneOptions<Wish>): Promise<Wish> {
     return await this.wishRepository.findOne(query);
+  }
+
+  async findById(id: number): Promise<Wish> {
+    const wish = await this.wishRepository.findOne({
+      where: { id },
+      relations: ['owner', 'offers', 'offers.user'],
+    });
+
+    if (!wish) throw new BadRequestException('Подарок не найден');
+
+    return wish;
   }
 
   async findByMany(giftsId: number[]): Promise<Wish[]> {
     return await this.wishRepository.find({
       where: { id: In(giftsId) },
+    });
+  }
+
+  findLast(): Promise<Wish[]> {
+    return this.wishRepository.find({
+      order: { createdAt: 'DESC' },
+      take: 40,
+      relations: ['owner', 'offers'],
+    });
+  }
+
+  findTop(): Promise<Wish[]> {
+    return this.wishRepository.find({
+      take: 10,
+      order: { copied: 'desc' },
+      relations: ['owner', 'offers'],
     });
   }
 
@@ -72,5 +101,25 @@ export class WishesService {
     await this.wishRepository.delete(id);
 
     return wish;
+  }
+
+  async copyWish(id: number, ownerId: number): Promise<Wish> {
+    const wish = await this.findOne({
+      where: { id },
+      relations: { owner: false },
+    });
+
+    if (!wish) {
+      throw new NotFoundException(
+        `Подарок #${id} не найден или уже пренадлежит вам`,
+      );
+    }
+
+    await this.create({ ...wish, raised: 0, copied: 0 }, ownerId);
+
+    return await this.findOne({
+      where: { id },
+      relations: { owner: true },
+    });
   }
 }
