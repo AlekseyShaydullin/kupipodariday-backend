@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../users/users.service';
-import { IJwtPayload } from 'src/common/types';
+import { IJwtPayload } from '../../common/types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(payload: IJwtPayload) {
     const user = await this.userService.findOne({
-      where: { id: Number(payload.id), username: payload.username },
+      where: { id: payload.id, username: payload.username },
     });
     if (!user) {
       throw new UnauthorizedException(`Неправильный токен пользователя`);

@@ -5,38 +5,98 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  UseGuards,
+  Request,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { TUserRequest } from '../common/types';
+import { User } from './entities/user.entity';
+import { Wish } from '../wishes/entities/wish.entity';
+import { FindUserDto } from './dto/find-user.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  // GET/users/me
+  @Get('me')
+  findMe(
+    @Request()
+    { user }: TUserRequest,
+  ): Promise<User> {
+    return this.usersService.findOneById(user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  // PATCH/users/me
+  @Patch('me')
+  update(
+    @Request()
+    { user }: TUserRequest,
+    @Body()
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    return this.usersService.updateById(user.id, updateUserDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  // GET/users/me/wishes
+  @Get('me/wishes')
+  async findMyWishes(
+    @Request()
+    { user }: TUserRequest,
+  ): Promise<Wish[]> {
+    const wishes = await this.usersService.findUserWishes(user.id);
+    if (!wishes) throw new NotFoundException(`У пользователя нет пожеланий`);
+    return wishes;
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  // GET/users/{username}
+  @Get(':username')
+  async getByUsername(
+    @Param('username')
+    username: string,
+  ): Promise<User> {
+    const user = await this.usersService.findOne({
+      where: { username },
+    });
+    if (!user) {
+      throw new BadRequestException('Пользователь не найден');
+    }
+    return user;
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  // GET/users/{username}/wishes
+  @Get(':username/wishes')
+  async getWishesUser(
+    @Param('username')
+    username: string,
+  ): Promise<Wish[]> {
+    const { id } = await this.usersService.findOne({
+      where: { username },
+    });
+
+    if (!id) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const wishes = await this.usersService.findUserWishes(id);
+    if (!wishes) {
+      throw new NotFoundException('У пользователя нет пожеланий');
+    }
+
+    return wishes;
+  }
+
+  // POST/users/find
+  @Post('find')
+  async findMany(
+    @Body()
+    findUserDto: FindUserDto,
+  ): Promise<User[]> {
+    return await this.usersService.findByEmailOrUserName(findUserDto.query);
   }
 }

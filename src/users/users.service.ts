@@ -8,13 +8,16 @@ import { FindOneOptions, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { HashService } from 'src/hash/hash.service';
+import { HashService } from '../hash/hash.service';
+import { Wish } from 'src/wishes/entities/wish.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Wish)
+    private readonly wishRepository: Repository<Wish>,
     private readonly hashService: HashService,
   ) {}
 
@@ -38,6 +41,19 @@ export class UsersService {
   }
   async findOneById(id: number): Promise<User> {
     return await this.userRepository.findOneBy({ id });
+  }
+
+  async findByEmailOrUserName(query: string): Promise<User[]> {
+    return await this.userRepository.find({
+      where: [{ username: query }, { email: query }],
+    });
+  }
+
+  async findUserWishes(id: number): Promise<Wish[]> {
+    const wishes = await this.wishRepository.find({
+      where: { owner: { id } },
+    });
+    return wishes;
   }
 
   async updateById(id: number, updateUserDto: UpdateUserDto) {
