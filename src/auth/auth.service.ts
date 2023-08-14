@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { SigningUserDto } from './dto/sign-up.dto';
 import { UsersService } from '../users/users.service';
 import { HashService } from '../hash/hash.service';
-import { User } from 'src/users/entities/user.entity';
-import { TToken } from 'src/common/types';
+import { User } from '../users/entities/user.entity';
+import { TToken } from '../common/types';
 
 @Injectable()
 export class AuthService {

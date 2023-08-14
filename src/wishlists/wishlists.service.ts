@@ -16,7 +16,10 @@ export class WishlistsService {
     private readonly wishesService: WishesService,
   ) {}
 
-  async createWishlist(createWishlistDto: CreateWishlistDto, userId: number) {
+  async createWishlist(
+    createWishlistDto: CreateWishlistDto,
+    userId: number,
+  ): Promise<Wishlist> {
     const user = await this.usersService.findOneById(userId);
     const wishes = await this.wishesService.findByMany(
       createWishlistDto.itemsId,

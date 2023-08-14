@@ -19,7 +19,7 @@ export class WishesService {
     private readonly userService: UsersService,
   ) {}
 
-  async create(createWishDto: CreateWishDto, id: number) {
+  async create(createWishDto: CreateWishDto, id: number): Promise<Wish> {
     const owner = await this.userService.findOneById(id);
     const newWish = this.wishRepository.create({
       ...createWishDto,
@@ -64,7 +64,11 @@ export class WishesService {
     });
   }
 
-  async updateWish(id: number, updateWishDto: UpdateWishDto, ownerId: number) {
+  async updateWish(
+    id: number,
+    updateWishDto: UpdateWishDto,
+    ownerId: number,
+  ): Promise<Wish> {
     const wish = await this.findOne({
       where: { id },
       relations: { owner: true },

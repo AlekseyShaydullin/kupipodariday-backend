@@ -9,7 +9,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { HashService } from '../hash/hash.service';
-import { Wish } from 'src/wishes/entities/wish.entity';
+import { Wish } from '../wishes/entities/wish.entity';
 
 @Injectable()
 export class UsersService {
@@ -39,6 +39,7 @@ export class UsersService {
   async findOne(query: FindOneOptions<User>): Promise<User> {
     return await this.userRepository.findOne(query);
   }
+
   async findOneById(id: number): Promise<User> {
     return await this.userRepository.findOneBy({ id });
   }
@@ -56,7 +57,7 @@ export class UsersService {
     return wishes;
   }
 
-  async updateById(id: number, updateUserDto: UpdateUserDto) {
+  async updateById(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const { email, username, password } = updateUserDto;
     const user = await this.findOne({ where: { id } });
 
@@ -83,9 +84,5 @@ export class UsersService {
 
     await this.userRepository.update({ id }, updateUser);
     return this.findOne({ where: { id } });
-  }
-
-  async removeById(id: number) {
-    await this.userRepository.delete(id);
   }
 }

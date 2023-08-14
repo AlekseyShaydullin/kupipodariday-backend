@@ -19,7 +19,10 @@ export class OffersService {
     private readonly usersService: UsersService,
   ) {}
 
-  async createOffer(createOfferDto: CreateOfferDto, id: number) {
+  async createOffer(
+    createOfferDto: CreateOfferDto,
+    id: number,
+  ): Promise<Offer> {
     const user = await this.usersService.findOneById(id);
     const { itemId, amount } = createOfferDto;
     const wish = await this.wishesService.findOne({

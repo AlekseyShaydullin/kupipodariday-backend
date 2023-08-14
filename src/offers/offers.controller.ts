@@ -11,7 +11,7 @@ import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Offer } from './entities/offer.entity';
-import { TUserRequest } from 'src/common/types';
+import { TUserRequest } from '../common/types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('offers')
