@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { Offer } from './entities/offer.entity';
 import { WishesService } from '../wishes/wishes.service';
-import { User } from 'src/users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class OffersService {
@@ -16,9 +16,11 @@ export class OffersService {
     @InjectRepository(Offer)
     private readonly offerRepository: Repository<Offer>,
     private readonly wishesService: WishesService,
+    private readonly usersService: UsersService,
   ) {}
 
-  async createOffer(createOfferDto: CreateOfferDto, user: User) {
+  async createOffer(createOfferDto: CreateOfferDto, id: number) {
+    const user = await this.usersService.findOneById(id);
     const { itemId, amount } = createOfferDto;
     const wish = await this.wishesService.findOne({
       where: { id: itemId },
