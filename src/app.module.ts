@@ -8,6 +8,10 @@ import { WishlistsModule } from './wishlists/wishlists.module';
 import { OffersModule } from './offers/offers.module';
 import { AuthModule } from './auth/auth.module';
 import { HashModule } from './hash/hash.module';
+import { User } from './users/entities/user.entity';
+import { Offer } from './offers/entities/offer.entity';
+import { Wish } from './wishes/entities/wish.entity';
+import { Wishlist } from './wishlists/entities/wishlist.entity';
 
 @Module({
   imports: [
@@ -21,8 +25,8 @@ import { HashModule } from './hash/hash.module';
       username: process.env.DB_USER || 'student',
       password: process.env.DB_PASS || 'student',
       database: process.env.DB_NAME || 'kupipodariday',
-      entities: [],
-      synchronize: false,
+      entities: [User, Offer, Wish, Wishlist],
+      synchronize: true,
     }),
     UsersModule,
     WishesModule,

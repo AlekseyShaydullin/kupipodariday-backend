@@ -49,7 +49,7 @@ export class UsersController {
     @Request()
     { user }: TUserRequest,
   ): Promise<Wish[]> {
-    const wishes = await this.usersService.findUserWishes(user.id);
+    const wishes = await this.usersService.findUserWishes(user.username);
     if (!wishes) throw new NotFoundException(`У пользователя нет пожеланий`);
     return wishes;
   }
@@ -75,20 +75,7 @@ export class UsersController {
     @Param('username')
     username: string,
   ): Promise<Wish[]> {
-    const { id } = await this.usersService.findOne({
-      where: { username },
-    });
-
-    if (!id) {
-      throw new NotFoundException('Пользователь не найден');
-    }
-
-    const wishes = await this.usersService.findUserWishes(id);
-    if (!wishes) {
-      throw new NotFoundException('У пользователя нет пожеланий');
-    }
-
-    return wishes;
+    return this.usersService.findUserWishes(username);
   }
 
   // POST/users/find

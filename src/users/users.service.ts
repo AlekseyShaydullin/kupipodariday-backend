@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -16,8 +17,6 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Wish)
-    private readonly wishRepository: Repository<Wish>,
     private readonly hashService: HashService,
   ) {}
 
@@ -50,9 +49,13 @@ export class UsersService {
     });
   }
 
-  async findUserWishes(id: number): Promise<Wish[]> {
-    const wishes = await this.wishRepository.find({
-      where: { owner: { id } },
+  async findUserWishes(username: string): Promise<Wish[]> {
+    const user = await this.findOne({ where: { username } });
+    if (!user) throw new BadRequestException('User not found');
+    const { wishes } = await this.userRepository.findOne({
+      where: { username },
+      select: ['wishes'],
+      relations: ['wishes', 'wishes.owner', 'wishes.offers'],
     });
     return wishes;
   }
