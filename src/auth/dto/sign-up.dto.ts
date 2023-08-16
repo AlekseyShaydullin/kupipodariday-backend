@@ -5,6 +5,12 @@ export class SigningUserDto {
   @Length(2, 30)
   username: string;
 
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+
   @IsString()
   @IsOptional()
   @Length(2, 200)
@@ -13,10 +19,4 @@ export class SigningUserDto {
   @IsUrl()
   @IsOptional()
   avatar?: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  password: string;
 }

@@ -12,13 +12,17 @@ async function bootstrap() {
   const corsOptions: CorsOptions = {
     origin: 'http://localhost:3001',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Access-Control-Allow-Origin',
+    ],
   };
   app.enableCors(corsOptions);
 
   app.useGlobalPipes(new ValidationPipe());
   await app.listen(port, () => {
-    console.log(`App listening on port 3000`);
+    console.log(`App listening on port ${port}`);
   });
 }
 bootstrap();

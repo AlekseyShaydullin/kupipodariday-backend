@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { IsNumber } from 'class-validator';
+import { IsBoolean, IsNumber } from 'class-validator';
 import { BaseEntity } from 'src/base-entity/base.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Wish } from 'src/wishes/entities/wish.entity';
@@ -24,5 +24,6 @@ export class Offer extends BaseEntity {
     type: 'boolean',
     default: false,
   })
+  @IsBoolean()
   hidden: boolean;
 }

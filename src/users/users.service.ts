@@ -29,9 +29,13 @@ export class UsersService {
     if (isExist) throw new UnauthorizedException(`Пользователь уже существует`);
 
     const newUser = this.userRepository.create({
-      ...createUserDto,
+      username: createUserDto.username,
+      about: createUserDto.about,
+      avatar: createUserDto.avatar,
+      email: createUserDto.email,
       password: this.hashService.getHash(createUserDto.password),
     });
+
     return await this.userRepository.save(newUser);
   }
 

@@ -1,8 +1,8 @@
 {
   "name": "kupipodariday-backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "КупиПодариДай - API для сервиса вишлистов",
+  "author": "Aleksey Shaydullin",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

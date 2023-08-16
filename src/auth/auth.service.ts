@@ -27,8 +27,8 @@ export class AuthService {
     return user;
   }
 
-  signup(signingUserDto: SigningUserDto): Promise<User> {
-    return this.userService.createUser(signingUserDto);
+  async signup(signingUserDto: SigningUserDto): Promise<User> {
+    return await this.userService.createUser(signingUserDto);
   }
 
   async signin(user: User): Promise<TToken> {
