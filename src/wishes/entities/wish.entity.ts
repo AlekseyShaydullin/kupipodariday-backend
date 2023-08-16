@@ -41,12 +41,11 @@ export class Wish extends BaseEntity {
   price: number;
 
   @Column({
-    type: 'float',
+    default: 0,
+    type: 'decimal',
+    scale: 2,
   })
-  @IsNumber({
-    maxDecimalPlaces: 2,
-  })
-  @IsPositive()
+  @IsNumber()
   raised: number;
 
   @ManyToOne(() => User, (user) => user.wishes)
