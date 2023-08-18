@@ -55,13 +55,31 @@ export class UsersService {
 
   async findUserWishes(username: string): Promise<Wish[]> {
     const user = await this.findOne({ where: { username } });
-    if (!user) throw new BadRequestException('User not found');
-    const { wishes } = await this.userRepository.findOne({
-      where: { username },
+    if (!user) throw new BadRequestException('Пользователь не найден');
+    const wishes = await this.userRepository.find({
       select: ['wishes'],
-      relations: ['wishes', 'wishes.owner', 'wishes.offers'],
+      relations: {
+        wishes: {
+          owner: true,
+          offers: {
+            owner: {
+              wishes: true,
+              offers: true,
+              wishlists: {
+                owner: true,
+                items: true,
+              },
+            },
+          },
+        },
+      },
+      where: {
+        id: user.id,
+      },
     });
-    return wishes;
+
+    const wishesArr = wishes.map((item) => item.wishes);
+    return wishesArr[0];
   }
 
   async updateById(id: number, updateUserDto: UpdateUserDto): Promise<User> {

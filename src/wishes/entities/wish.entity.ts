@@ -1,11 +1,5 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import {
-  IsDecimal,
-  IsNumber,
-  IsPositive,
-  IsUrl,
-  Length,
-} from 'class-validator';
+import { IsDecimal, IsNumber, IsUrl, Length } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { BaseEntity } from '../../base-entity/base.entity';
 import { Offer } from '../../offers/entities/offer.entity';
@@ -32,12 +26,11 @@ export class Wish extends BaseEntity {
   image: string;
 
   @Column({
-    type: 'float',
+    default: 0,
+    type: 'decimal',
+    scale: 2,
   })
-  @IsNumber({
-    maxDecimalPlaces: 2,
-  })
-  @IsPositive()
+  @IsNumber()
   price: number;
 
   @Column({

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, In, Repository } from 'typeorm';
+import { FindOneOptions, In, Repository, UpdateResult } from 'typeorm';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { Wish } from './entities/wish.entity';
@@ -27,6 +27,7 @@ export class WishesService {
     });
     return this.wishRepository.save(newWish);
   }
+
   async findOne(query: FindOneOptions<Wish>): Promise<Wish> {
     return await this.wishRepository.findOne(query);
   }
@@ -34,7 +35,16 @@ export class WishesService {
   async findById(id: number): Promise<Wish> {
     const wish = await this.wishRepository.findOne({
       where: { id },
-      relations: ['owner', 'offers', 'offers.user'],
+      relations: {
+        owner: {
+          wishes: true,
+          wishlists: true,
+        },
+        offers: {
+          owner: true,
+          item: true,
+        },
+      },
     });
 
     if (!wish) throw new BadRequestException('Подарок не найден');
@@ -42,7 +52,7 @@ export class WishesService {
     return wish;
   }
 
-  async findByMany(giftsId: number[]): Promise<Wish[]> {
+  async findMany(giftsId: number[]): Promise<Wish[]> {
     return await this.wishRepository.find({
       where: { id: In(giftsId) },
     });
@@ -87,6 +97,10 @@ export class WishesService {
       where: { id },
       relations: { owner: true },
     });
+  }
+
+  async updateRise(id: number, newRise: number): Promise<UpdateResult> {
+    return await this.wishRepository.update({ id: id }, { raised: newRise });
   }
 
   async removeWish(id: number, ownerId: number): Promise<Wish> {

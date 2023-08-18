@@ -16,7 +16,7 @@ export class Wishlist extends BaseEntity {
     type: 'varchar',
     default: '',
   })
-  @Length(0, 1500)
+  @Length(1500)
   description: string;
 
   @Column({

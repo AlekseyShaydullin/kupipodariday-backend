@@ -21,27 +21,35 @@ export class WishlistsService {
     userId: number,
   ): Promise<Wishlist> {
     const user = await this.usersService.findOneById(userId);
-    const wishes = await this.wishesService.findByMany(
-      createWishlistDto.itemsId,
-    );
+    const items = await this.wishesService.findMany(createWishlistDto.itemsId);
 
-    return this.wishlistRepository.save({
+    const wishList = this.wishlistRepository.create({
       ...createWishlistDto,
+      items,
       owner: user,
-      items: wishes,
     });
+    return await this.wishlistRepository.save(wishList);
   }
 
   async findAll(): Promise<Wishlist[]> {
-    return await this.wishlistRepository.find({
-      relations: ['owner', 'items'],
+    const wishLists = await this.wishlistRepository.find({
+      relations: {
+        items: true,
+        owner: true,
+      },
     });
+
+    if (!wishLists) {
+      throw new BadRequestException('Коллекция подарков не найдена не найден');
+    }
+
+    return wishLists;
   }
 
   async findOne(id: number): Promise<Wishlist> {
     const wishList = await this.wishlistRepository.findOne({
       where: { id },
-      relations: ['owner', 'items'],
+      relations: { items: true, owner: true },
     });
 
     if (!wishList) {
@@ -66,7 +74,7 @@ export class WishlistsService {
 
     if (updateWishlistDto.itemsId) {
       const { itemsId, ...rest } = updateWishlistDto;
-      const wishes = await this.wishesService.findByMany(itemsId);
+      const wishes = await this.wishesService.findMany(itemsId);
       wishList.items.push(...wishes);
       await this.wishlistRepository.save(wishList);
       await this.wishlistRepository.update(id, rest);

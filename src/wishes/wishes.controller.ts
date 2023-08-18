@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { WishesService } from './wishes.service';
 import { CreateWishDto } from './dto/create-wish.dto';
@@ -48,7 +49,16 @@ export class WishesController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findWishByID(@Param('id') id: number): Promise<Wish> {
-    return this.wishesService.findById(id);
+    console.log(id);
+
+    try {
+      return await this.wishesService.findById(id);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(
+        `Не удается получить карточку с указанным id: ${id}`,
+      );
+    }
   }
 
   // PATCH/wishes/{id}

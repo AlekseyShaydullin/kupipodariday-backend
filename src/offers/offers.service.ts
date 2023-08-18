@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -29,47 +30,65 @@ export class OffersService {
       where: { id: itemId },
       relations: { owner: true },
     });
+    const newRise = Number(wish.raised) + Number(amount);
+    const sum = wish.price - wish.raised;
 
-    if (!wish) {
-      throw new NotFoundException(`Подарок не найден`);
-    }
     if (wish.owner.id === user.id) {
-      throw new ForbiddenException(`Простите, но вы не можете вносить деньги`);
+      throw new ForbiddenException(
+        'вы не можете вносить деньги на свои подарки',
+      );
+    }
+    if (amount > wish.price) {
+      throw new ForbiddenException('сумма взноса больше стоимости подарка');
     }
 
-    const { price, raised } = wish;
-    if (amount + raised > price) {
+    if (amount > sum) {
       throw new ForbiddenException(
-        `В данный момент, вы не можете заплатить больше, чем 
-        ${price - raised} RUB`,
+        'сумма взноса больше оставшейся для сбора суммы на подарок',
       );
     }
 
-    await this.wishesService.updateWish(
-      itemId,
-      { raised: amount + raised },
-      wish.owner.id,
-    );
+    if (wish.raised === wish.price) {
+      throw new ForbiddenException('нужная сумма уже собрана');
+    }
 
-    const offer = this.offerRepository.create({
-      ...createOfferDto,
-      owner: user,
-      item: wish,
-    });
+    console.log(user);
 
-    return this.offerRepository.save(offer);
+    await this.wishesService.updateRise(itemId, newRise);
+    const offerDto = { ...createOfferDto, owner: user, item: wish };
+    return await this.offerRepository.save(offerDto);
   }
 
   async findAll(): Promise<Offer[]> {
-    return await this.offerRepository.find({
-      where: {},
-      relations: { owner: true, item: true },
-    });
+    try {
+      return this.offerRepository.find({
+        relations: {
+          item: {
+            owner: true,
+            offers: true,
+          },
+          owner: {
+            wishes: true,
+            wishlists: true,
+            offers: true,
+          },
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('не удалось получить все заявки');
+    }
   }
 
   async findOne(id: number): Promise<Offer> {
-    return await this.offerRepository.findOne({
+    const offer = await this.offerRepository.findOne({
       where: { id },
     });
+
+    if (!offer) {
+      throw new NotFoundException(`Не удалось найти заявку с id: ${id}`);
+    }
+
+    return offer;
   }
 }
