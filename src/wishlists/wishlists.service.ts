@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
@@ -86,6 +90,12 @@ export class WishlistsService {
 
   async remove(id: number, userId: number): Promise<Wishlist> {
     const wishList = await this.findOne(id);
+    // console.log(wishList);
+    console.log(wishList.owner.id === userId);
+
+    if (!wishList) {
+      throw new NotFoundException('Не найдена подборка подарков');
+    }
 
     if (wishList.owner.id !== userId) {
       throw new BadRequestException(
